@@ -1,0 +1,23 @@
+llm:
+  model: claude-haiku-4-5-20251001
+
+cachier:
+  cache_dir: llm_cache
+
+evaluate:
+  expt_name: team_workflow
+  result_dir: results
+  entry_point: answer_question
+
+dataset:
+  split: team_allocation
+  shuffle_seed: 42
+  n: 4
+
+ptools:
+  extract_profiles:
+    method: simulate
+  evaluate_allocations:
+    method: simulate
+  answer_question:
+    method: direct

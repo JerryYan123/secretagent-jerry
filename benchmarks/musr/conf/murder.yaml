@@ -1,0 +1,31 @@
+llm:
+  model: claude-haiku-4-5-20251001
+
+cachier:
+  cache_dir: llm_cache
+
+evaluate:
+  expt_name: murder_workflow
+  result_dir: results
+  entry_point: answer_question
+
+dataset:
+  split: murder_mysteries
+  shuffle_seed: 42
+  n: 4
+
+# Workflow condition (default): answer_question bound to direct
+# runs the body which calls extract_evidence -> deduce_answer.
+#
+# Zero-shot override:
+#   ptools.answer_question.method=simulate
+#
+# Agent loop override:
+#   ptools.answer_question.method=program_of_thought
+ptools:
+  extract_evidence:
+    method: simulate
+  deduce_answer:
+    method: simulate
+  answer_question:
+    method: direct

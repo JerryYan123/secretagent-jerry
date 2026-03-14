@@ -1,0 +1,23 @@
+llm:
+  model: claude-haiku-4-5-20251001
+
+cachier:
+  cache_dir: llm_cache
+
+evaluate:
+  expt_name: object_workflow
+  result_dir: results
+  entry_point: answer_question
+
+dataset:
+  split: object_placements
+  shuffle_seed: 42
+  n: 4
+
+ptools:
+  track_movements:
+    method: simulate
+  infer_belief:
+    method: simulate
+  answer_question:
+    method: direct
