@@ -18,8 +18,8 @@ except ImportError:
 BENCHMARK_DIR = Path(__file__).resolve().parent.parent
 RESULTS_DIR = BENCHMARK_DIR / "results"
 
-# Level order (like sports): zeroshot_structured, zeroshot_unstructured, workflow, pot, react
-LEVEL_ORDER = ["zeroshot_structured", "zeroshot_unstructured", "workflow", "pot", "react"]
+# Level order: zeroshot_unstructured (level 1), zeroshot_structured (level 2), workflow, pot, react
+LEVEL_ORDER = ["zeroshot_unstructured", "zeroshot_structured", "workflow", "pot", "react"]
 LEVEL_ALIAS = {"zs_struct": "zeroshot_structured", "zs_unstruct": "zeroshot_unstructured"}
 
 # Exclude test runs

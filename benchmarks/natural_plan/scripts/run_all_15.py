@@ -20,12 +20,12 @@ BENCHMARK_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_N = 50
 
 RUNS = [
-    # Calendar
-    ("cal", "zeroshot_structured", "conf/calendar.yaml", "cal_zs_struct",
-     "ptools.calendar_scheduling.method=simulate", "dataset.prompt_mode=0shot"),
+    # Calendar (level 1=unstruct, level 2=struct)
     ("cal", "zeroshot_unstructured", "conf/calendar.yaml", "cal_zs_unstruct",
      "ptools.calendar_scheduling.method=prompt_llm", "ptools.calendar_scheduling.prompt_template_file=prompt_templates/zeroshot.txt",
      "dataset.prompt_mode=0shot"),
+    ("cal", "zeroshot_structured", "conf/calendar.yaml", "cal_zs_struct",
+     "ptools.calendar_scheduling.method=simulate", "dataset.prompt_mode=0shot"),
     ("cal", "workflow", "conf/calendar.yaml", "cal_workflow",
      "ptools.calendar_scheduling.method=direct", "ptools.calendar_scheduling.fn=ptools_calendar.calendar_workflow"),
     ("cal", "pot", "conf/calendar.yaml", "cal_pot",
@@ -34,12 +34,12 @@ RUNS = [
     ("cal", "react", "conf/calendar.yaml", "cal_react",
      "ptools.calendar_scheduling.method=simulate_pydantic",
      "ptools.calendar_scheduling.tools=[ptools_calendar.extract_constraints,ptools_calendar.solve_problem,ptools_calendar.format_answer]"),
-    # Meeting
-    ("meet", "zeroshot_structured", "conf/meeting.yaml", "meet_zs_struct",
-     "ptools.meeting_planning.method=simulate", "dataset.prompt_mode=0shot"),
+    # Meeting (level 1=unstruct, level 2=struct)
     ("meet", "zeroshot_unstructured", "conf/meeting.yaml", "meet_zs_unstruct",
      "ptools.meeting_planning.method=prompt_llm", "ptools.meeting_planning.prompt_template_file=prompt_templates/zeroshot.txt",
      "dataset.prompt_mode=0shot"),
+    ("meet", "zeroshot_structured", "conf/meeting.yaml", "meet_zs_struct",
+     "ptools.meeting_planning.method=simulate", "dataset.prompt_mode=0shot"),
     ("meet", "workflow", "conf/meeting.yaml", "meet_workflow",
      "ptools.meeting_planning.method=direct", "ptools.meeting_planning.fn=ptools_meeting.meeting_workflow"),
     ("meet", "pot", "conf/meeting.yaml", "meet_pot",
@@ -48,12 +48,12 @@ RUNS = [
     ("meet", "react", "conf/meeting.yaml", "meet_react",
      "ptools.meeting_planning.method=simulate_pydantic",
      "ptools.meeting_planning.tools=[ptools_meeting.extract_constraints,ptools_meeting.solve_problem,ptools_meeting.format_answer]"),
-    # Trip
-    ("trip", "zeroshot_structured", "conf/trip.yaml", "trip_zs_struct",
-     "ptools.trip_planning.method=simulate", "dataset.prompt_mode=0shot"),
+    # Trip (level 1=unstruct, level 2=struct)
     ("trip", "zeroshot_unstructured", "conf/trip.yaml", "trip_zs_unstruct",
      "ptools.trip_planning.method=prompt_llm", "ptools.trip_planning.prompt_template_file=prompt_templates/zeroshot.txt",
      "dataset.prompt_mode=0shot"),
+    ("trip", "zeroshot_structured", "conf/trip.yaml", "trip_zs_struct",
+     "ptools.trip_planning.method=simulate", "dataset.prompt_mode=0shot"),
     ("trip", "workflow", "conf/trip.yaml", "trip_workflow",
      "ptools.trip_planning.method=direct", "ptools.trip_planning.fn=ptools_trip.trip_workflow"),
     ("trip", "pot", "conf/trip.yaml", "trip_pot",

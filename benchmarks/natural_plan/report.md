@@ -45,7 +45,7 @@ uv run python expt.py run --config-file conf/calendar.yaml ptools.calendar_sched
 **cal_zs_struct**
 
 ```bash
-uv run python expt.py run --config-file conf/calendar.yaml ptools.calendar_scheduling.method=simulate dataset.prompt_mode=0shot evaluate.expt_name=cal_zs_struct dataset.n=50 evaluate.result_dir=/Users/yanjiarui/Desktop/Will_research/secretagent/benchmarks/natural_plan/results/run_20260318_082239 dataset.stratified=true dataset.sample_n=50 dataset.sample_seed=42 dataset.prompt_mode=0shot evaluate.prompt_trace=true
+uv run python expt.py run --config-file conf/calendar.yaml ptools.calendar_scheduling.method=simulate evaluate.expt_name=cal_zs_struct dataset.n=50 evaluate.result_dir=results/run_20260318_004100 dataset.stratified=true dataset.sample_n=50 dataset.sample_seed=42 dataset.prompt_mode=0shot
 ```
 
 **cal_workflow**
