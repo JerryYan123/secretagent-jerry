@@ -9,12 +9,12 @@ evaluate:
   result_dir: results
   expt_name: DEFAULT
   entry_point: meeting_planning
-  prompt_trace: false
+  prompt_trace: true
 
 dataset:
   split: meeting
   shuffle_seed: 42
-  prompt_mode: 5shot
+  prompt_mode: 0shot
   n: 4
   stratified: false
   sample_n: 50
@@ -23,9 +23,12 @@ dataset:
 ptools:
   extract_constraints:
     method: simulate
+    example_file: examples/meeting.json
   solve_problem:
     method: simulate
+    example_file: examples/meeting.json
   format_answer:
     method: simulate
+    example_file: examples/meeting.json
   meeting_planning:
     method: DEFAULT
