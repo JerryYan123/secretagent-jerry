@@ -9,3 +9,9 @@
 
  * Run experiments in sports_understanding
      * use smaller models till the task gets "interesting"?
+
+## Code quality/etc
+
+ * More guidance for claude/devs on defense programming
+ * results.py validate --purge-errors
+ * results.py purge-old-results
