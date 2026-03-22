@@ -45,7 +45,6 @@ from secretagent.core import implement_via_config
 from secretagent.dataset import Dataset, Case
 from secretagent.evaluate import Evaluator
 import secretagent.implement_pydantic  # noqa: F401 (registers simulate_pydantic factory)
-import ptools_common  # noqa: F401 (registers match_choice factory)
 
 SPLIT_TO_MODULE = {
     'murder_mysteries': 'ptools_murder',
