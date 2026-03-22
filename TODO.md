@@ -1,5 +1,19 @@
 # Tasks
 
+## Core issues
+
+ * non-primitive types don't work with Simulate
+   * problem is output validation
+   * should at least give warnings
+   * when errors are caught by evaluator's, should _record relevant
+     information from the stack trace
+   * move expt.py into core
+
+## CLI improvements
+ 
+  * results.py validate [--require xxx] [--purge] ...
+  * results.py delete-obsolete 
+
 ## Caching
 
  * Check if disabling caching from the command-line works
@@ -13,5 +27,4 @@
 ## Code quality/etc
 
  * More guidance for claude/devs on defense programming
- * results.py validate --purge-errors
- * results.py purge-old-results
+ * Standardize implement strategies: [un]structured_baseline, pot, workflow, react
