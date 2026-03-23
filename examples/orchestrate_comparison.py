@@ -9,7 +9,12 @@ Usage:
 """
 
 import json
+import sys
 import time
+
+# Force unbuffered output
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
 from secretagent.core import interface, _INTERFACES
 from secretagent import config
 from secretagent.orchestrate import (
@@ -167,12 +172,12 @@ def run_experiment(name: str, pipeline_fn, test_cases: list) -> dict:
 def main():
     # Configure
     config.configure(
-        llm={'model': 'together_ai/Qwen/Qwen3.5-9B'},
+        llm={'model': 'together_ai/Qwen/Qwen3.5-9B', 'stream': True},
         orchestrate={
             'model': 'together_ai/Qwen/Qwen3.5-397B-A17B',
             'max_retries': 3,
         },
-        echo={'orchestrate': True},
+        echo={'orchestrate': True, 'stream': True},
         cachier={'enable_caching': False},
     )
 
