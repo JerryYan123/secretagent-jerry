@@ -30,6 +30,7 @@ Example usage:
 """
 
 from collections import Counter
+import shutil
 import typer
 import pandas as pd
 from itertools import combinations
@@ -55,6 +56,8 @@ def _get_dirs(ctx: typer.Context, latest: int = 1, check: Optional[list[str]] = 
     if not ctx.args:
         raise ValueError('No paths provided.')
     dirs = savefile.filter_paths(ctx.args, latest=latest, dotlist=check or [])
+    if not dirs:
+        raise ValueError('No matching experiment directories found.')
     for d in dirs:
         if not (Path(d) / 'results.csv').exists():
             raise ValueError(f'No results.csv in {d}')
@@ -105,10 +108,15 @@ def pair(
     metric: Optional[list[str]] = typer.Option(None, help='Metrics to pair'),
 ):
     """Run paired t-tests on a metric and latency across experiments."""
+    if not metric:
+        raise ValueError('At least one --metric is required for paired comparison')
     dirs = _get_dirs(ctx, latest=latest, check=check)
     dfs = [pd.read_csv(d / 'results.csv') for d in dirs]
     if len(dfs) < 2:
         raise ValueError('Need at least 2 experiments for paired comparison')
+    # Sort by mean of the first metric so comparisons read in order
+    paired = sorted(zip(dirs, dfs), key=lambda x: x[1][metric[0]].mean(), reverse=True)
+    dirs, dfs = [list(t) for t in zip(*paired)]
     rows = []
     for (pa, da), (pb, db) in combinations(zip(dirs, dfs), 2):
         fua = savefile.file_under_part(pa)
@@ -156,6 +164,42 @@ def compare_configs(
         print(f'properties of {d}:')
         for p in uncommon_pairs:
             print(f'  {p}')
+
+
+_DEFAULT_REQUIRED_FILES = ['config.yaml', 'results.csv']
+
+
+@app.command(context_settings=_EXTRA_ARGS)
+def validate(
+    ctx: typer.Context,
+    latest: int = typer.Option(1, help='Keep latest k dirs per tag; 0 for all'),
+    check: Optional[list[str]] = typer.Option(None, help='Config constraint like key=value'),
+    require: Optional[list[str]] = typer.Option(None, help='Additional required files'),
+    norequire: Optional[list[str]] = typer.Option(None, help='Remove a default required file'),
+    purge: bool = typer.Option(False, help='Delete directories that fail validation'),
+):
+    """Check that experiment directories contain required files."""
+    required = set(_DEFAULT_REQUIRED_FILES)
+    for f in (require or []):
+        required.add(f)
+    for f in (norequire or []):
+        required.discard(f)
+    dirs = savefile.filter_paths(ctx.args, latest=latest, dotlist=check or [])
+    bad_dirs = []
+    for d in dirs:
+        missing = [f for f in sorted(required) if not (d / f).exists()]
+        if missing:
+            print(f'{d}: missing {", ".join(missing)}')
+            bad_dirs.append(d)
+    if not bad_dirs:
+        print('All directories OK.')
+        return
+    if purge:
+        answer = input(f'Delete {len(bad_dirs)} directories? [y/N] ')
+        if answer.strip().lower() == 'y':
+            for d in bad_dirs:
+                shutil.rmtree(d)
+                print(f'  deleted {d}')
 
 
 @app.callback()
