@@ -100,8 +100,9 @@ def quick_test(ctx: typer.Context):
     top-level interface on a single example, tracing as much as
     possible.
     """
-    dataset = setup(ctx.args)
+    dataset = setup_and_load_dataset(ctx.args)
     print('dataset is', dataset.summary())
+    interface = ptools.are_sports_in_sentence_consistent
     pprint.pprint(config.GLOBAL_CONFIG)
 
     input_args = dataset.cases[0].input_args
@@ -110,7 +111,7 @@ def quick_test(ctx: typer.Context):
             cachier={'enable_caching': False},
             echo={
                 'service': True,
-                'llm_input': True, 'llm_output': True, 
+                'llm_input': True, 'llm_output': True,
                 'code_eval_input': True, 'code_eval_output': True}
     ):
         with record.recorder() as records:
