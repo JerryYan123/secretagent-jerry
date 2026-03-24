@@ -221,3 +221,6 @@ marimo/_lsp/
 __marimo__/
 
 .env
+.claude/
+.cursor/
+.codex/
