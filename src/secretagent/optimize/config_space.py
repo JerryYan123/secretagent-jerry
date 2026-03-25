@@ -1,10 +1,8 @@
 """Define a space of possible configuration changes.
 """
 
-import copy
 from functools import reduce
 from itertools import product
-from pprint import pprint
 from pydantic import BaseModel
 from typing import Any
 import yaml
@@ -52,7 +50,6 @@ class ConfigSpace(BaseModel):
 # smoketest
 if __name__ == '__main__':
     cs = ConfigSpace(
-        base_config_path='foo.yaml',
         variants={
             'name': ['fred'],
             'llm.model': ['big', 'small'],
