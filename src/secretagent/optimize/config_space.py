@@ -1,7 +1,6 @@
 """Define a space of possible configuration changes.
 """
 
-from functools import reduce
 from itertools import product
 from pydantic import BaseModel
 from typing import Any
@@ -24,17 +23,29 @@ class ConfigSpace(BaseModel):
             # pair the parameters up with the values
             param_bindings = list(zip(self.variants, value_choices))
             # convert from something like (llm.model, 'gpt5') to a nested
-            # dict for the heirarchical parameter, like {'llm':{'model':'gpt5'}}
-            bindings_as_dicts = [self._expand_heirarchy(p,v) for p, v in param_bindings]
-            # combine the parameter bindings into a single dictionary
-            yield reduce(lambda d1, d2: dict(**d1, **d2), bindings_as_dicts)
+            # dict for the hierarchical parameter, like {'llm':{'model':'gpt5'}}
+            bindings_as_dicts = [self._expand_hierarchy(p, v) for p, v in param_bindings]
+            # deep-merge the parameter bindings into a single dictionary
+            result = {}
+            for d in bindings_as_dicts:
+                self._deep_merge(result, d)
+            yield result
 
-    def _expand_heirarchy(self, dotted_param, value):
+    def _deep_merge(self, base, override):
+        """Merge override into base, recursing into nested dicts."""
+        for k, v in override.items():
+            if k in base and isinstance(base[k], dict) and isinstance(v, dict):
+                self._deep_merge(base[k], v)
+            else:
+                base[k] = v
+
+    def _expand_hierarchy(self, dotted_param, value):
+        """Convert a dotted parameter like 'llm.model' into a nested dict like {'llm': {'model': value}}."""
         if '.' not in dotted_param:
             return {dotted_param: value}
         else:
             first, rest = dotted_param.split('.', 1)
-            return {first: self._expand_heirarchy(rest, value)}
+            return {first: self._expand_hierarchy(rest, value)}
 
     @staticmethod
     def load(yaml_file: str):
