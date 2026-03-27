@@ -24,7 +24,7 @@ import pathlib
 from typing import Callable
 
 from secretagent import config, llm_util, record
-from secretagent.core import Interface, Implementation, register_factory
+from secretagent.core import Interface, register_factory
 from secretagent.implement_core import SimulateFactory, _load_template
 
 

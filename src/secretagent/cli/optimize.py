@@ -12,9 +12,6 @@ Usage::
     uv run -m secretagent.cli.optimize summary sweep_results.csv
 """
 
-import sys
-from pathlib import Path
-
 import typer
 import yaml
 

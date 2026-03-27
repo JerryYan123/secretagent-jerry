@@ -27,7 +27,7 @@ passed through to the inner factory.
 """
 
 from collections import Counter
-from typing import Any, Callable
+from typing import Callable
 
 from secretagent.core import (
     Interface, Implementation, register_factory, _FACTORIES,
@@ -58,7 +58,6 @@ class SelfConsistencyFactory(Implementation.Factory):
 
         def result_fn(*args, **kw):
             outputs = []
-            all_stats: list[dict[str, Any]] = []
 
             for i in range(n_samples):
                 try:
