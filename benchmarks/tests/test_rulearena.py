@@ -23,7 +23,7 @@ from secretagent import config
 from secretagent.core import implement_via_config
 from secretagent.dataset import Case, Dataset
 
-RULEARENA_DIR = Path(__file__).resolve().parent.parent / "benchmarks" / "rulearena"
+RULEARENA_DIR = Path(__file__).resolve().parent.parent / "rulearena"
 if str(RULEARENA_DIR) not in sys.path:
     sys.path.insert(0, str(RULEARENA_DIR))
 

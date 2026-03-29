@@ -5,8 +5,11 @@
 test:
 	uv run pytest tests/ -v
 
+benchmark_tests:
+	uv run pytest benchmarks/tests/ -v	
+
 lint:
-	uv run ruff check src benchmarks/sports_understanding
+	uv run ruff check src benchmarks
 
 typehints:
 	time uv run mypy src --ignore-missing-imports

@@ -53,9 +53,7 @@ def setup_and_teardown():
     orch_workflow.implementation = None
 
     with config.configuration(
-        orchestrate={'model': ORCHESTRATOR_MODEL},
-        cachier={'enable_caching': False},
-    ):
+            orchestrate={'model': ORCHESTRATOR_MODEL} ):
         yield
 
     orch_double.implementation = None
