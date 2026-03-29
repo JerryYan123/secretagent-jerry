@@ -1,4 +1,5 @@
 import warnings
+from pathlib import Path
 import pytest
 import pandas as pd
 
@@ -315,3 +316,35 @@ def test_pair_strips_suffix(two_expts):
                            + _dirs_as_args(two_expts))
     assert result.exit_code == 0
     assert 'cost_t' in result.output
+
+
+# --- plot tests ---
+
+def test_plot_creates_png(two_expts, tmp_path):
+    out = str(tmp_path / 'test_plot.png')
+    result = runner.invoke(app, ['plot', '--latest', '0',
+                                  '--metric', 'correct', '--metric', 'cost-',
+                                  '--output', out]
+                           + _dirs_as_args(two_expts))
+    assert result.exit_code == 0
+    assert Path(out).exists()
+    assert Path(out).stat().st_size > 0
+
+
+def test_plot_requires_two_metrics(two_expts, tmp_path):
+    out = str(tmp_path / 'bad.png')
+    result = runner.invoke(app, ['plot', '--latest', '0',
+                                  '--metric', 'correct',
+                                  '--output', out]
+                           + _dirs_as_args(two_expts))
+    assert result.exit_code != 0
+
+
+def test_plot_with_pareto(three_expts, tmp_path):
+    out = str(tmp_path / 'pareto_plot.png')
+    result = runner.invoke(app, ['plot', '--latest', '0', '--pareto',
+                                  '--metric', 'correct', '--metric', 'cost-',
+                                  '--output', out]
+                           + _dirs_as_args(three_expts))
+    assert result.exit_code == 0
+    assert Path(out).exists()

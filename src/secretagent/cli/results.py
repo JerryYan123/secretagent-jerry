@@ -267,7 +267,73 @@ def pair(
     for c in p_cols:
         df[c] = df[c].map(lambda x: f'{x:.5f}')
     print(df)
-            
+
+
+@app.command(context_settings=_EXTRA_ARGS)
+def plot(
+    ctx: typer.Context,
+    latest: int = typer.Option(1, help='Keep latest k dirs per tag; 0 for all'),
+    check: Optional[list[str]] = typer.Option(None, help='Config constraint like key=value'),
+    metric: Optional[list[str]] = typer.Option(None, help='Exactly two metrics to plot'),
+    pareto: bool = typer.Option(False, help='Only show Pareto-optimal experiments'),
+    output: str = typer.Option('results_plot.png', help='Output PNG file path'),
+):
+    """Plot experiments as points with error boxes on two metrics."""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle
+
+    if not metric or len(metric) != 2:
+        raise ValueError('Exactly two --metric options are required for plot')
+    names, directions = parse_metrics(metric)
+    mx, my = names
+
+    dirs = _get_dirs(ctx, latest=latest, check=check)
+    dfs = [pd.read_csv(d / 'results.csv') for d in dirs]
+
+    # Compute pareto set for marker styling (even if not filtering)
+    optimal_set: set[str] = set()
+    if len(dfs) >= 2:
+        pair_df = paired_result_df(dirs, dfs, names)
+        optimal_set = set(find_pareto_optimal(pair_df, names, directions=directions))
+
+    if pareto:
+        filtered = [(d, df) for d, df in zip(dirs, dfs)
+                     if savefile.file_under_part(d) in optimal_set]
+        dirs, dfs = [list(t) for t in zip(*filtered)] if filtered else ([], [])
+
+    if not dfs:
+        print('No experiments to plot.')
+        return
+
+    fig, ax = plt.subplots(figsize=(10, 7))
+
+    for d, df in zip(dirs, dfs):
+        label = savefile.file_under_part(d)
+        x_mean, x_sem = df[mx].mean(), df[mx].sem()
+        y_mean, y_sem = df[my].mean(), df[my].sem()
+
+        marker = '*' if label in optimal_set else 'o'
+        msize = 12 if label in optimal_set else 6
+        ax.plot(x_mean, y_mean, marker, markersize=msize, label=label)
+        color = ax.lines[-1].get_color()
+        rect = Rectangle(
+            (x_mean - x_sem, y_mean - y_sem),
+            2 * x_sem, 2 * y_sem,
+            linewidth=1, edgecolor=color, facecolor=color, alpha=0.25,
+        )
+        ax.add_patch(rect)
+
+    ax.set_xlabel(f'{mx} ({"maximize" if directions.get(mx, True) else "minimize"})')
+    ax.set_ylabel(f'{my} ({"maximize" if directions.get(my, True) else "minimize"})')
+    ax.set_title(f'{mx} vs {my}')
+    ax.legend(fontsize=8, loc='best')
+    fig.tight_layout()
+    fig.savefig(output, dpi=150)
+    plt.close(fig)
+    print(f'Plot saved to {output}')
+
 
 @app.command(context_settings=_EXTRA_ARGS)
 def compare_configs(
