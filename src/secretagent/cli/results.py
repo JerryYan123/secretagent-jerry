@@ -422,6 +422,53 @@ def delete_obsolete(
             print(f'  deleted {d}')
 
 
+def _find_benchmarks_dir() -> Path:
+    """Walk up from cwd to find the 'benchmarks' directory."""
+    cwd = Path.cwd().resolve()
+    for parent in [cwd, *cwd.parents]:
+        candidate = parent / 'benchmarks'
+        if candidate.is_dir():
+            return candidate
+    raise ValueError('Cannot find benchmarks/ directory above cwd')
+
+
+@app.command('export', context_settings=_EXTRA_ARGS)
+def export_results(
+    ctx: typer.Context,
+    latest: int = typer.Option(1, help='Keep latest k dirs per tag; 0 for all'),
+    check: Optional[list[str]] = typer.Option(None, help='Config constraint like key=value'),
+):
+    """Copy filtered result directories to benchmarks/results/<relative_path>.
+
+    Run from a benchmark directory (e.g. benchmarks/bbh/sports_understanding).
+    Copies each filtered result directory to
+    benchmarks/results/<path_from_benchmarks>/<result_dir_name>.
+    """
+    dirs = _get_dirs(ctx, latest=latest, check=check)
+    benchmarks_dir = _find_benchmarks_dir()
+    cwd = Path.cwd().resolve()
+
+    # Compute relative path from benchmarks/ to cwd
+    try:
+        rel = cwd.relative_to(benchmarks_dir)
+    except ValueError:
+        raise ValueError(
+            f'cwd ({cwd}) is not under benchmarks/ ({benchmarks_dir})')
+
+    dest_base = benchmarks_dir / 'results' / rel
+    dest_base.mkdir(parents=True, exist_ok=True)
+
+    for d in dirs:
+        dest = dest_base / d.name
+        if dest.exists():
+            print(f'  skipping {d.name} (already exists)')
+            continue
+        shutil.copytree(d, dest)
+        print(f'  {d} -> {dest}')
+
+    print(f'\nExported {len(dirs)} directories to {dest_base}')
+
+
 @app.callback()
 def main(
     config_file: Optional[str] = typer.Option(None, help='YAML config file to load'),
