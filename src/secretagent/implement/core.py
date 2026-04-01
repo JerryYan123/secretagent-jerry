@@ -238,6 +238,7 @@ class PoTFactory(Implementation.Factory):
             interface: Interface,
             tools='__all__',
             additional_imports: list[types.ModuleType] | None = None,
+            inject_args: bool = False,
             **prompt_kw
     ) -> Callable:
         resolved_tools = resolve_tools(interface, tools)
@@ -265,8 +266,15 @@ class PoTFactory(Implementation.Factory):
             and iface.implementation.implementing_fn in tool_functions.values()]
         def result_fn(*args, **kw):
             with config.configuration(**prompt_kw):
+                # Inject input arg values into sandbox so LLM can reference
+                # them as variables without copying large strings into code.
+                if inject_args:
+                    arg_names = list(interface.annotations.keys())[:-1]
+                    for name, val in zip(arg_names, args):
+                        python_executor.custom_tools[name] = val
                 prompt = self.create_prompt(
-                    interface, tool_interfaces, additional_imports, *args, **kw)
+                    interface, tool_interfaces, additional_imports,
+                    *args, inject_args=inject_args, **kw)
                 llm_output, stats = llm_util.llm(
                     prompt, config.require('llm.model'))
                 try:
@@ -292,10 +300,17 @@ class PoTFactory(Implementation.Factory):
                 return answer
         return result_fn
 
-    def create_prompt(self, interface, tool_interfaces, additional_authorized_imports, *args, **kw):
+    def create_prompt(self, interface, tool_interfaces, additional_authorized_imports,
+                      *args, inject_args=False, **kw):
         """Construct a prompt that calls an LLM to predict the output of the function.
         """
-        input_args = interface.format_args(*args, **kw)
+        if inject_args:
+            arg_names = list(interface.annotations.keys())[:-1]
+            var_list = ', '.join(f'`{n}`' for n in arg_names)
+            input_args = interface.format_args(*args, **kw)
+            input_args += f'\n\nThe input args are available in these variables: {var_list}'
+        else:
+            input_args = interface.format_args(*args, **kw)
         if (not input_args.strip()):
             raise ValueError(f'input_args null for {interface.name} on {args=} {kw=}')
         tool_stub_src_listing = '\n\n'.join([
@@ -327,6 +342,12 @@ class PoTFactory(Implementation.Factory):
 
         template = _load_template('program_of_thought.txt')
         prompt = template.substitute(**template_bindings)
+        if inject_args:
+            prompt = prompt.replace(
+                'Start the\ncode block by initializing a variable for each input.  It is ESSENTIAL\n'
+                'that the code is able to be run independently.',
+                'The input variables are already loaded in the execution environment — '
+                'do not write them out in the code. Use them in your code if needed.')
         return prompt
 
 
