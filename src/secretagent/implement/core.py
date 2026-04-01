@@ -12,7 +12,6 @@ from string import Template
 from textwrap import dedent
 from smolagents.local_python_executor import LocalPythonExecutor
 from typing import Any, Callable
-import types
 
 from pydantic import Field
 
@@ -85,7 +84,7 @@ class SimulateFactory(Implementation.Factory):
         with config.configuration(**self.prompt_kw):
             prompt = self.create_prompt(interface, *args, examples=self.examples_cases, **kw)
             llm_output, stats = llm_util.llm(
-                prompt, config.require('llm.model'))
+                prompt, self.llm_model)
             try:
                 return_type = interface.annotations.get('return', str)
                 answer = self.parse_output(return_type, llm_output)
@@ -208,7 +207,7 @@ class PromptLLMFactory(Implementation.Factory):
             arg_dict.update(kw)
             prompt = self.template.substitute(arg_dict)
             llm_output, stats = llm_util.llm(
-                prompt, config.require('llm.model'))
+                prompt, self.llm_model)
             try:
                 return_type = interface.annotations.get('return', str)
                 answer = _extract_answer(return_type, llm_output, self.answer_pattern)
@@ -289,7 +288,7 @@ class PoTFactory(Implementation.Factory):
             prompt = self.create_prompt(
                 interface, self.tool_interfaces, self.additional_imports, *args, **kw)
             llm_output, stats = llm_util.llm(
-                prompt, config.require('llm.model'))
+                prompt, self.llm_model)
             try:
                 generated_code = _extract_answer(
                     str,

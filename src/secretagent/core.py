@@ -6,6 +6,8 @@ import inspect
 from pydantic import BaseModel, Field
 from typing import Any, Callable, Optional
 
+from secretagent import config
+
 # registries of defined interfaces and implementation factories
 
 _INTERFACES : list['Interface'] = []
@@ -154,6 +156,14 @@ class Implementation(BaseModel):
         bound_interface: Optional['Interface'] = Field(
             default=None,
             description="Interface this factory copy is bound to (set by build_implementation)")
+        model: str | None = Field(
+            default=None,
+            description="LLM model override; defaults to config llm.model")
+
+        @property
+        def llm_model(self) -> str:
+            """Return the model to use: explicit override or config default."""
+            return self.model or config.require('llm.model')
 
         @property
         def __name__(self):
@@ -180,6 +190,7 @@ class Implementation(BaseModel):
             """
             factory = self.model_copy()
             factory.bound_interface = interface
+            factory.model = builder_kwargs.pop('model', None)
             factory.setup(**builder_kwargs)
 
             return Implementation(

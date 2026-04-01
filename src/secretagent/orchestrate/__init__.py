@@ -17,11 +17,11 @@ Or via config::
         task_description: "Solve the problem by ..."
 """
 
-from typing import Any, Callable
+from typing import Any
 
 from secretagent import config
 from secretagent.core import (
-    Interface, Implementation, all_interfaces, register_factory,
+    Implementation, all_interfaces, register_factory,
 )
 from secretagent.orchestrate.catalog import PtoolCatalog, PtoolInfo
 from secretagent.orchestrate.composer import compose, compose_with_retry

@@ -8,7 +8,7 @@ from typing import Any
 from omegaconf import OmegaConf
 
 from secretagent import config
-from secretagent.core import Interface, Implementation, _FACTORIES, register_factory
+from secretagent.core import Implementation, _FACTORIES, register_factory
 
 
 def _load_learned_module(learned_path):

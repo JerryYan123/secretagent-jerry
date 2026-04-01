@@ -51,7 +51,7 @@ class SelfConsistencyFactory(Implementation.Factory):
         self.n_samples = n_samples
         inner_factory = _FACTORIES[inner_method]
         inner_impl = inner_factory.build_implementation(
-            self.bound_interface, **inner_kwargs)
+            self.bound_interface, model=self.model, **inner_kwargs)
         self.inner_fn = inner_impl.implementing_fn
 
     def __call__(self, *args, **kw):
