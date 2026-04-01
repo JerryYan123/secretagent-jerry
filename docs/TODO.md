@@ -9,12 +9,15 @@
    - need to add filtering for iscorrect examples
  * make orchestrate a Learner
 
-## Core issues
+## Core issues/bugs
 
- * non-primitive types don't work with Simulate
+ * `model` is not passed down to `llm_util` in simulate - see
+   `model_sweep` code in local `sports_understanding`
+ * non-primitive types don't work with simulate
    * problem is output validation, should at least give warnings
    * when errors are caught by evaluator's, should _record relevant
      information from the stack trace
+ * boxes should wrap text
 
 ## Caching
 

@@ -71,7 +71,7 @@ This project is heavily configuration-driven, like most ML systems.
    * `together_ai/google/gemma-3n-E4B-it` - ultra-cheap ($0.02/$0.04 per 1M tokens)
      * doesn't support tool use, needed for pydantic-ai models
    * `claude-haiku-4-5-20251001` - quick cheap and stable, needs Anthropic API key
-   * `together_ai/deepseek-ai/DeepSeek-V3.1` - cheap but strong reasoning model, needs Together API key
+   * `together_ai/deepseek-ai/DeepSeek-V3.1` - cheap but strong reasoning ($0.60/$1.70 per 1M tokens)
    * `together_ai/openai/gpt-oss-20b` - very cheap ($0.05/$0.20 per 1M tokens)
    * `together_ai/openai/gpt-oss-120b` - good value, larger ($0.15/$0.60 per 1M tokens)
    * `together_ai/Qwen/Qwen3-Next-80B-A3B-Instruct` - good value, MoE ($0.15/$1.50 per 1M tokens)
