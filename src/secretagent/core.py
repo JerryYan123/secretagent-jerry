@@ -123,13 +123,52 @@ def implement_via_config(ptool_module, tools_cfg):
         method: simulate
       sport_for:
         method: simulate
+
+    Optional parse post-processing: add a ``parse`` key to any interface
+    config to wrap the implementation with a parse step.
+
+      calendar_scheduling:
+        method: simulate
+        parse:
+          method: simulate      # LLM re-parses the raw output
+          # or: method: direct, fn: my_module.my_parser
     """
     for func_name, factory_kws in tools_cfg.items():
         factory_kws = dict(factory_kws)
         # get the method and remove it from the config for this tool
         method = factory_kws.pop('method')
-        interface = getattr(ptool_module, func_name)
-        interface.implement_via(method, **factory_kws)
+        parse_cfg = factory_kws.pop('parse', None)
+        iface = getattr(ptool_module, func_name)
+        iface.implement_via(method, **factory_kws)
+        if parse_cfg:
+            _add_parse_wrapper(iface, parse_cfg)
+
+
+def _add_parse_wrapper(iface, parse_cfg):
+    """Wrap an interface's implementation with a parse post-processing step.
+
+    Creates a lightweight parse interface that inherits the original
+    interface's return type and docstring, so that ``simulate`` knows
+    the expected output format.
+    """
+    parse_cfg = dict(parse_cfg)
+    parse_method = parse_cfg.pop('method')
+    return_type = iface.annotations.get('return', str)
+
+    parse_iface = Interface(
+        func=lambda raw_output: raw_output,
+        name=f'{iface.name}__parse',
+        doc=f'Parse and normalize raw output into the expected format.\n\n{iface.doc}',
+        src='',
+        annotations={'raw_output': str, 'return': return_type},
+    )
+    parse_iface.implement_via(parse_method, **parse_cfg)
+
+    original_fn = iface.implementation.implementing_fn
+    def wrapped(*args, **kw):
+        raw = original_fn(*args, **kw)
+        return parse_iface(str(raw))
+    iface.implementation.implementing_fn = wrapped
 
 
 class Implementation(BaseModel):

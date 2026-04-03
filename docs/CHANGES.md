@@ -10,6 +10,27 @@ make plot_natural    # natural_plan only
 make plot_rule       # rulearena only
 ```
 
+ * **Parse post-processing** — any interface can now add a `parse`
+   step via config. The parse interface inherits the original's return
+   type and docstring, then wraps the output. Two modes:
+
+   - `simulate` — LLM re-parses the raw output each time
+   - `program_of_thought` — LLM generates regex/parsing code, then
+     executes it in sandbox (cached across examples)
+   - `direct` — user-provided parsing function (`fn=module.func`)
+
+   Implementation: `_add_parse_wrapper()` in `core.py` creates a
+   lightweight parse `Interface` on the fly and wraps the original
+   `implementing_fn`. No new factories needed.
+
+```
+# LLM parse
+ptools.calendar_scheduling.parse.method=simulate
+
+# LLM generates code to parse (PoT)
+ptools.calendar_scheduling.parse.method=program_of_thought
+```
+
  * **Bug fix** — `cli/results.py` `ttest_rel` crash on boolean
    `correct` column; added `.astype(float)` cast.
 
