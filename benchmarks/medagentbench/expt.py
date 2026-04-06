@@ -565,6 +565,12 @@ def orchestrate_improve_prompt(ctx: typer.Context,
             pipeline = build_pipeline(code, ptools.solve_medical_task, tool_ifaces)
             import json
             pipeline._fn.__globals__['json'] = json
+            # Bind the pipeline to the interface so __call__ works
+            from secretagent.core import Implementation
+            ptools.solve_medical_task.implementation = Implementation(
+                implementing_fn=pipeline,
+                factory_method='orchestrate',
+                factory_kwargs={})
         except Exception as ex:
             print(f'[improve-prompt]   compose failed: {ex}')
             return 0.0, 999.0, 999.0, None
@@ -679,7 +685,8 @@ Return ONLY the merged description text."""
         pipeline = build_pipeline(best_code, ptools.solve_medical_task, tool_ifaces)
         import json
         pipeline._fn.__globals__['json'] = json
-        ptools.solve_medical_task.implementation = type(ptools.solve_medical_task.implementation)(
+        from secretagent.core import Implementation
+        ptools.solve_medical_task.implementation = Implementation(
             implementing_fn=pipeline,
             factory_method='orchestrate',
             factory_kwargs={})
