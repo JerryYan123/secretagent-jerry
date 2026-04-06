@@ -68,9 +68,9 @@ class TestTransformRegistry:
 # ── Base class helper tests ──────────────────────────────────────────
 
 class TestGenerateCodeHelper:
-    @patch('secretagent.orchestrate.transforms.base.llm')
-    @patch('secretagent.orchestrate.transforms.base._ruff_fix')
-    @patch('secretagent.orchestrate.transforms.base._extract_code')
+    @patch('secretagent.llm_util.llm')
+    @patch('secretagent.orchestrate.composer._ruff_fix')
+    @patch('secretagent.orchestrate.composer._extract_code')
     def test_generate_code(self, mock_extract, mock_ruff, mock_llm):
         mock_llm.return_value = ('```python\nreturn 42\n```', {})
         mock_extract.return_value = 'return 42'
