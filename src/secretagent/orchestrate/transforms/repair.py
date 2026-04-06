@@ -50,11 +50,13 @@ class RepairTransform(PipelineTransform):
                     'top_patterns': top_patterns,
                 })
 
+        summary_parts = [
+            f'{t["ptool"]} ({t["total_errors"]} errors)' for t in targets
+        ]
         return TransformProposal(
             transform_name='repair',
             rationale=(
-                f'Ptool(s) with errors: '
-                f'{", ".join(f"{t["ptool"]} ({t["total_errors"]} errors)" for t in targets)}. '
+                f'Ptool(s) with errors: {", ".join(summary_parts)}. '
                 f'Adding error handling to improve reliability.'
             ),
             changes=targets,

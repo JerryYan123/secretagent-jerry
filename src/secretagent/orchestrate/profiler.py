@@ -27,6 +27,8 @@ class PtoolProfile(BaseModel):
     avg_latency: float = 0.0
     avg_tokens_in: float = 0.0
     avg_tokens_out: float = 0.0
+    max_tokens_out: int = 0
+    output_token_saturation: float = 0.0  # max_tokens_out / configured limit
     cost_fraction: float = 0.0
     accuracy_when_correct: float = 0.0
     accuracy_when_incorrect: float = 0.0
@@ -51,6 +53,7 @@ def profile_from_results(
     pipeline_source: str | None = None,
     latest: int = 0,
     check: list[str] | None = None,
+    max_output_tokens: int | None = None,
 ) -> PipelineProfile:
     """Build a PipelineProfile from experiment result directories.
 
@@ -59,7 +62,12 @@ def profile_from_results(
         pipeline_source: optional source code of the pipeline
         latest: keep latest k dirs per tag (0 = all)
         check: config constraint dotlist for filtering
+        max_output_tokens: configured token limit (for saturation calculation).
+            If None, reads from config 'llm.max_tokens'.
     """
+    if max_output_tokens is None:
+        from secretagent import config
+        max_output_tokens = config.get('llm.max_tokens') or 0
     dirs = savefile.filter_paths(result_dirs, latest=latest, dotlist=check or [])
 
     # Accumulators
@@ -77,6 +85,7 @@ def profile_from_results(
     ptool_n_calls: dict[str, int] = defaultdict(int)
     ptool_correct_cases: dict[str, int] = defaultdict(int)
     ptool_incorrect_cases: dict[str, int] = defaultdict(int)
+    ptool_max_tokens_out: dict[str, int] = defaultdict(int)
     ptool_errors: dict[str, list[dict[str, Any]]] = defaultdict(list)
     cases_correct_total = 0
     cases_incorrect_total = 0
@@ -115,7 +124,10 @@ def profile_from_results(
                     ptool_total_cost[func] += stats.get('cost', 0.0)
                     ptool_total_latency[func] += stats.get('latency', 0.0)
                     ptool_total_tokens_in[func] += stats.get('input_tokens', 0)
-                    ptool_total_tokens_out[func] += stats.get('output_tokens', 0)
+                    out_tokens = stats.get('output_tokens', 0)
+                    ptool_total_tokens_out[func] += out_tokens
+                    if out_tokens > ptool_max_tokens_out[func]:
+                        ptool_max_tokens_out[func] = out_tokens
 
                     # Detect errors
                     output = step.get('output')
@@ -146,6 +158,11 @@ def profile_from_results(
             avg_latency=ptool_total_latency[name] / nc if nc else 0.0,
             avg_tokens_in=ptool_total_tokens_in[name] / nc if nc else 0.0,
             avg_tokens_out=ptool_total_tokens_out[name] / nc if nc else 0.0,
+            max_tokens_out=ptool_max_tokens_out[name],
+            output_token_saturation=(
+                ptool_max_tokens_out[name] / max_output_tokens
+                if max_output_tokens else 0.0
+            ),
             cost_fraction=ptool_total_cost[name] / pipeline_total_cost,
             accuracy_when_correct=(
                 ptool_correct_cases[name] / cases_correct_total

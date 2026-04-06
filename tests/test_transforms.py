@@ -98,23 +98,137 @@ class TestValidateCode:
 # ── Stub tests ───────────────────────────────────────────────────────
 
 class TestStubsRaiseNotImplemented:
-    @pytest.mark.parametrize('name', [
-        'prune', 'downgrade', 'induce', 'expand', 'repair', 'restructure',
-    ])
+    """Transforms not yet implemented should raise NotImplementedError."""
+
+    @pytest.mark.parametrize('name', ['induce', 'expand', 'restructure'])
     def test_propose_raises(self, name, simple_profile, empty_catalog):
         t = get_transform(name)
         with pytest.raises(NotImplementedError):
             t.propose(simple_profile, empty_catalog)
 
-    @pytest.mark.parametrize('name', [
-        'prune', 'downgrade', 'induce', 'expand', 'repair', 'restructure',
-    ])
+    @pytest.mark.parametrize('name', ['induce', 'expand', 'restructure'])
     def test_apply_raises(self, name, empty_catalog):
         t = get_transform(name)
         proposal = TransformProposal(transform_name=name, rationale='test')
         pipeline = Pipeline('return 1', 'def f() -> int:', {})
         with pytest.raises(NotImplementedError):
             t.apply(proposal, pipeline, empty_catalog)
+
+
+# ── Implemented transform tests ─────────────────────────────────────
+
+class TestDowngradeTransform:
+    def test_propose_identifies_expensive_ptools(self):
+        t = get_transform('downgrade')
+        profile = PipelineProfile(ptool_profiles={
+            'expensive': PtoolProfile(name='expensive', cost_fraction=0.6, avg_cost=0.05),
+            'cheap': PtoolProfile(name='cheap', cost_fraction=0.4, avg_cost=0.01),
+        })
+        proposal = t.propose(profile, PtoolCatalog([]))
+        assert proposal.transform_name == 'downgrade'
+        assert len(proposal.changes) == 1
+        assert proposal.changes[0]['ptool'] == 'expensive'
+
+    def test_apply_returns_config_with_cheaper_model(self):
+        from secretagent import config
+        t = get_transform('downgrade')
+        proposal = TransformProposal(
+            transform_name='downgrade',
+            rationale='test',
+            changes=[{'ptool': 'expensive', 'cost_fraction': 0.6, 'avg_cost': 0.05}],
+        )
+        pipeline = Pipeline('return 1', 'def f() -> int:', {})
+        with config.configuration(llm={'model': 'together_ai/deepseek-ai/DeepSeek-V3.1'}):
+            result = t.apply(proposal, pipeline, PtoolCatalog([]))
+        assert result.success is True
+        assert result.new_config is not None
+        assert 'ptools.expensive.model' in result.new_config
+
+    def test_apply_fails_when_already_cheapest(self):
+        from secretagent import config
+        t = get_transform('downgrade')
+        proposal = TransformProposal(
+            transform_name='downgrade',
+            rationale='test',
+            changes=[{'ptool': 'x', 'cost_fraction': 0.6, 'avg_cost': 0.01}],
+        )
+        pipeline = Pipeline('return 1', 'def f() -> int:', {})
+        with config.configuration(llm={'model': 'together_ai/google/gemma-3n-E4B-it'}):
+            result = t.apply(proposal, pipeline, PtoolCatalog([]))
+        assert result.success is False
+        assert 'cheapest' in result.message
+
+
+class TestPruneTransform:
+    def test_propose_identifies_low_lift_ptools(self):
+        t = get_transform('prune')
+        profile = PipelineProfile(ptool_profiles={
+            'useless': PtoolProfile(name='useless', lift=0.005, cost_fraction=0.3),
+            'useful': PtoolProfile(name='useful', lift=0.15, cost_fraction=0.7),
+        })
+        proposal = t.propose(profile, PtoolCatalog([]))
+        assert proposal.transform_name == 'prune'
+        assert len(proposal.changes) == 1
+        assert proposal.changes[0]['ptool'] == 'useless'
+
+    @patch('secretagent.llm_util.llm')
+    @patch('secretagent.orchestrate.composer._extract_code')
+    @patch('secretagent.orchestrate.composer._ruff_fix')
+    def test_apply_generates_new_pipeline(self, mock_ruff, mock_extract, mock_llm):
+        mock_llm.return_value = ('```python\nreturn 42\n```', {})
+        mock_extract.return_value = 'return 42'
+        mock_ruff.return_value = 'return 42'
+
+        t = get_transform('prune')
+        proposal = TransformProposal(
+            transform_name='prune',
+            rationale='test',
+            changes=[{'ptool': 'useless', 'lift': 0.005, 'cost_fraction': 0.3}],
+        )
+        pipeline = Pipeline('return 42', 'def f() -> int:', {})
+        result = t.apply(proposal, pipeline, PtoolCatalog([]))
+        assert result.success is True
+        assert result.new_pipeline_code == 'return 42'
+
+
+class TestRepairTransform:
+    def test_propose_identifies_error_ptools(self):
+        from secretagent.orchestrate.profiler import ErrorPattern
+        t = get_transform('repair')
+        profile = PipelineProfile(ptool_profiles={
+            'buggy': PtoolProfile(
+                name='buggy', n_calls=10,
+                error_patterns=[
+                    ErrorPattern(pattern='**exception: ValueError', frequency=5),
+                ],
+            ),
+            'stable': PtoolProfile(name='stable', n_calls=10),
+        })
+        proposal = t.propose(profile, PtoolCatalog([]))
+        assert proposal.transform_name == 'repair'
+        assert len(proposal.changes) == 1
+        assert proposal.changes[0]['ptool'] == 'buggy'
+        assert proposal.changes[0]['total_errors'] == 5
+
+    @patch('secretagent.llm_util.llm')
+    @patch('secretagent.orchestrate.composer._extract_code')
+    @patch('secretagent.orchestrate.composer._ruff_fix')
+    def test_apply_generates_repaired_pipeline(self, mock_ruff, mock_extract, mock_llm):
+        mock_llm.return_value = ('```python\ntry:\n    return buggy(x)\nexcept:\n    return 0\n```', {})
+        mock_extract.return_value = 'try:\n    return buggy(x)\nexcept:\n    return 0'
+        mock_ruff.return_value = 'try:\n    return buggy(x)\nexcept:\n    return 0'
+
+        t = get_transform('repair')
+        proposal = TransformProposal(
+            transform_name='repair',
+            rationale='test',
+            changes=[{'ptool': 'buggy', 'total_errors': 5, 'error_rate': 0.5,
+                       'top_patterns': ['**exception: ValueError']}],
+        )
+        pipeline = Pipeline('return buggy(x)', 'def f(x: str) -> int:', {'buggy': lambda x: 0})
+        result = t.apply(proposal, pipeline, PtoolCatalog([]))
+        assert result.success is True
+        assert result.new_pipeline_code is not None
 
 
 # ── should_apply logic tests ────────────────────────────────────────
