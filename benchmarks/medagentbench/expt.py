@@ -575,25 +575,25 @@ def orchestrate_improve_prompt(ctx: typer.Context,
             print(f'[improve-prompt]   compose failed: {ex}')
             return 0.0, 999.0, 999.0, None
 
+        # Use the full evaluator with refsol grading
+        evaluator = MedAgentBenchEvaluator(fhir_base)
         correct = 0
         total_latency = 0.0
-        import time
+        total_cost = 0.0
+        n = len(train_cases)
+
         for case in train_cases:
-            fhir_tools.clear_post_log()
             try:
-                start = time.time()
-                predicted = ptools.solve_medical_task(*case.input_args)
-                latency = time.time() - start
-                total_latency += latency
-                if case.expected_output is not None and predicted == case.expected_output:
-                    correct += 1
+                row = evaluator.measure(case, ptools.solve_medical_task)
+                correct += row.get('correct', 0.0)
+                total_latency += row.get('latency', 0.0)
+                total_cost += row.get('cost', 0.0)
             except Exception:
                 pass
 
-        n = len(train_cases)
         # Unbind so next variant can rebind
         ptools.solve_medical_task.implementation = None
-        return correct / n, total_latency / n, 0.0, code
+        return correct / n, total_latency / n, total_cost / n, code
 
     # Baseline
     ptools.solve_medical_task.implement_via('orchestrate', **{k: v for k, v in smt_cfg.items() if k != 'method'})
