@@ -9,7 +9,6 @@ from secretagent.orchestrate.catalog import PtoolCatalog
 from secretagent.orchestrate.profiler import PipelineProfile
 from secretagent.orchestrate.transforms.base import (
     PipelineTransform, TransformProposal, TransformResult,
-    format_profiling_summary,
 )
 from secretagent.orchestrate.pipeline import Pipeline
 
