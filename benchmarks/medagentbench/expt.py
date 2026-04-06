@@ -444,10 +444,10 @@ def orchestrate_evolve_run(ctx: typer.Context,
             n_generations=n_gen,
         )
 
+        from secretagent.experimental.improve import _apply_variant, _get_ptool_info
+
         if result['improved'] and result['code']:
             print(f'[evolve] improvement found! fitness: {result["fitness"].get("fitness", 0):.3f}')
-            # Apply the improvement
-            from secretagent.experimental.improve import _apply_variant, _get_ptool_info
             _apply_variant(target, result['code'], _get_ptool_info(target))
         else:
             print(f'[evolve] no improvement over baseline')
