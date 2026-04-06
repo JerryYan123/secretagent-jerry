@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence
 
 from pydantic import BaseModel
 
@@ -12,7 +12,9 @@ from secretagent import config
 from secretagent.orchestrate.catalog import PtoolCatalog
 from secretagent.orchestrate.pipeline import Pipeline
 from secretagent.orchestrate.profiler import PipelineProfile, profile_from_results
-from secretagent.orchestrate.transforms.base import PipelineTransform
+
+if TYPE_CHECKING:
+    from secretagent.orchestrate.transforms.base import PipelineTransform
 
 log = logging.getLogger(__name__)
 
