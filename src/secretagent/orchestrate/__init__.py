@@ -29,11 +29,20 @@ from secretagent.orchestrate.pipeline import (
     Pipeline, build_pipeline, _entry_signature_from_interface,
 )
 
+from secretagent.orchestrate.profiler import (  # noqa: E402
+    PipelineProfile, PtoolProfile, profile_from_results,
+)
+from secretagent.orchestrate.improve import (  # noqa: E402
+    improve_pipeline, ImprovementReport,
+)
+
 __all__ = [
     'PtoolCatalog', 'PtoolInfo',
     'compose', 'compose_with_retry',
     'Pipeline', 'build_pipeline',
     'OrchestrateFactory',
+    'PipelineProfile', 'PtoolProfile', 'profile_from_results',
+    'improve_pipeline', 'ImprovementReport',
 ]
 
 
@@ -126,3 +135,5 @@ class OrchestrateFactory(Implementation.Factory):
 
 
 register_factory('orchestrate', OrchestrateFactory())
+
+from secretagent.orchestrate import transforms  # noqa: F401, E402
