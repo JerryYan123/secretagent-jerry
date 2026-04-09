@@ -163,3 +163,21 @@ plot_trip:
 
 test:
 	uv run python -m pytest ../../benchmarks/tests/test_natural_plan.py -v
+
+#
+# Pareto sweep (exhaustive: methods x models per domain)
+#
+
+N_PARETO ?= 5
+TIMEOUT_PARETO ?= 600
+
+pareto_calendar:
+	uv run python run_pareto.py --domain calendar --dataset-n $(N_PARETO) --timeout $(TIMEOUT_PARETO)
+
+pareto_meeting:
+	uv run python run_pareto.py --domain meeting --dataset-n $(N_PARETO) --timeout $(TIMEOUT_PARETO)
+
+pareto_trip:
+	uv run python run_pareto.py --domain trip --dataset-n $(N_PARETO) --timeout $(TIMEOUT_PARETO)
+
+pareto_all: pareto_calendar pareto_meeting pareto_trip
