@@ -116,6 +116,11 @@ def improve_pipeline(
                 results.append(result.model_dump())
                 if result.success:
                     print(f'[improve] {t.name}: {result.message}')
+                    # Apply config overrides (e.g. model downgrades)
+                    if result.new_config:
+                        dotlist = [f'{k}={v}' for k, v in result.new_config.items()]
+                        config.configure(dotlist=dotlist)
+                        log.info('applied config overrides: %s', dotlist)
             except NotImplementedError:
                 log.debug('transform %s: apply not implemented', t.name)
                 continue
