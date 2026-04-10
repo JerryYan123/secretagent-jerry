@@ -258,6 +258,7 @@ def _generate_variant(
     previous_variants: list[str],
     is_direct: bool,
     workflow_graph: str = '',
+    profiling_summary: str = '',
 ) -> str:
     """Ask LLM to generate an improved version of the ptool."""
     traces_text = json.dumps(traces[:5], indent=2, default=str)
@@ -268,8 +269,13 @@ Workflow call graph (shows how this ptool connects to others):
 {workflow_graph}
 """ if workflow_graph else ''
 
+    profile_section = f"""
+Pipeline profiling data (FREE analysis of execution — use this to understand failure patterns):
+{profiling_summary}
+""" if profiling_summary else ''
+
     if is_direct:
-        prompt = f"""Improve this Python function implementation. The function is used in a medical EHR workflow.
+        prompt = f"""Improve this Python function implementation. The function is used in a workflow.
 
 Current implementation:
 ```python
@@ -280,7 +286,7 @@ Interface definition:
 ```python
 {ptool_info['src']}
 ```
-{graph_section}
+{graph_section}{profile_section}
 Execution traces (input → output for recent cases):
 {traces_text}
 
@@ -299,7 +305,7 @@ Current interface:
 ```python
 {ptool_info['src']}
 ```
-{graph_section}
+{graph_section}{profile_section}
 Execution traces (what the LLM produced vs what was expected):
 {traces_text}
 
@@ -377,6 +383,7 @@ def improve_ptool_within_workflow(
     population_size: int = 5,
     n_generations: int = 3,
     verbose: bool = True,
+    profiling_summary: str = '',
 ) -> dict:
     """Improve a single ptool within a frozen workflow via evolutionary LLM refinement.
 
@@ -387,6 +394,8 @@ def improve_ptool_within_workflow(
         population_size: number of parallel solutions per generation (default 5)
         n_generations: number of evolutionary generations (default 3)
         verbose: print progress
+        profiling_summary: optional profiling data string to include in LLM
+            prompts (FREE — computed from results files, no API cost)
 
     Returns:
         dict with keys: 'code' (best implementation), 'fitness' (score dict),
@@ -438,7 +447,7 @@ def improve_ptool_within_workflow(
         if verbose:
             print(f"[improve] generating variant {i+1}/{population_size}...")
 
-        response = _generate_variant(ptool_info, traces, baseline_entry, previous_variants, is_direct, workflow_graph)
+        response = _generate_variant(ptool_info, traces, baseline_entry, previous_variants, is_direct, workflow_graph, profiling_summary)
         code = _extract_code(response)
         if not code:
             if verbose:

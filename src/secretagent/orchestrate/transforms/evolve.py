@@ -40,8 +40,10 @@ class EvolveTransform(PipelineTransform):
         self.train_cases = train_cases
         self.population_size = population_size
         self.n_generations = n_generations
+        self._profile: PipelineProfile | None = None
 
     def should_apply(self, profile: PipelineProfile) -> bool:
+        self._profile = profile  # stash for apply() to pass to LLM
         if self.workflow_interface is None or not self.train_cases:
             log.debug('evolve: skipped (no workflow_interface or train_cases)')
             return False
@@ -91,6 +93,12 @@ class EvolveTransform(PipelineTransform):
         from secretagent.experimental.improve import (
             improve_ptool_within_workflow, _apply_variant, _get_ptool_info,
         )
+        from secretagent.orchestrate.transforms.base import format_profiling_summary
+
+        # Build profiling summary for the LLM (FREE)
+        prof_summary = ''
+        if self._profile is not None:
+            prof_summary = format_profiling_summary(self._profile)
 
         evolved = []
         for change in proposal.changes:
@@ -104,6 +112,7 @@ class EvolveTransform(PipelineTransform):
                     train_cases=self.train_cases,
                     population_size=self.population_size,
                     n_generations=self.n_generations,
+                    profiling_summary=prof_summary,
                 )
             except Exception as e:
                 log.warning('evolve: failed to improve %s: %s', ptool_name, e)
