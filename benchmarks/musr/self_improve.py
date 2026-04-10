@@ -109,7 +109,7 @@ def run(
     print(f'split: {split}')
     print(f'actor model: {config.get("llm.model")}')
     print(f'big model: {config.get("improve.model")}')
-    print(f'eval set: {len(eval_dataset)} cases, train set: {train_n} cases')
+    print(f'eval set: {len(eval_dataset.cases)} cases, train set: {train_n} cases')
     print(f'target accuracy: {target_accuracy:.0%}')
     print(f'max iterations: {max_iterations}')
     print(f'evolution: pop={population_size}, gen={n_generations}')
