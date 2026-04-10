@@ -101,19 +101,16 @@ def run(
     implement_via_config(ptools_module, config.require('ptools'))
 
     # Load datasets: train and eval must be DISJOINT to prevent overfitting
-    full_dataset = load_dataset(split)
-    eval_n = config.get('dataset.n') or len(full_dataset.cases)
-    eval_dataset = full_dataset.configure(
+    eval_dataset = load_dataset(split).configure(
         shuffle_seed=config.get('dataset.shuffle_seed'),
-        n=eval_n,
+        n=config.get('dataset.n'),
     )
-    # Train cases: take from the END of the shuffled dataset (after eval set)
-    all_cases = full_dataset.configure(shuffle_seed=42).cases
-    train_cases = all_cases[eval_n:eval_n + train_n]
-    if len(train_cases) < train_n:
-        # Not enough remaining — use a different shuffle seed for train
-        train_cases = full_dataset.configure(shuffle_seed=99).cases[:train_n]
-    print(f'Train/eval disjoint: {len(set(c.name for c in train_cases) & set(c.name for c in eval_dataset.cases))} overlap')
+    eval_names = {c.name for c in eval_dataset.cases}
+    # Train: load fresh, same shuffle, take cases NOT in eval set
+    train_pool = load_dataset(split).configure(shuffle_seed=42)
+    train_cases = [c for c in train_pool.cases if c.name not in eval_names][:train_n]
+    overlap = len(set(c.name for c in train_cases) & eval_names)
+    print(f'Train: {len(train_cases)} cases, eval: {len(eval_dataset.cases)} cases, overlap: {overlap}')
 
     entry_point = config.require('evaluate.entry_point')
     workflow_interface = getattr(ptools_module, entry_point)
