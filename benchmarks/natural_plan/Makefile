@@ -31,13 +31,13 @@ cal_pot:
 	uv run python expt.py run --config-file conf/calendar.yaml \
 	  evaluate.expt_name=cal_pot \
 	  ptools.calendar_scheduling.method=program_of_thought \
-	  ptools.calendar_scheduling.tools=[ptools_calendar.extract_constraints,ptools_calendar.solve_problem,ptools_calendar.format_answer]
+	  ptools.calendar_scheduling.tools=[ptools_calendar.parse_schedules,ptools_calendar.find_available_slots,ptools_calendar.select_and_format]
 
 cal_react:
 	uv run python expt.py run --config-file conf/calendar.yaml \
 	  evaluate.expt_name=cal_react \
 	  ptools.calendar_scheduling.method=simulate_pydantic \
-	  ptools.calendar_scheduling.tools=[ptools_calendar.extract_constraints,ptools_calendar.solve_problem,ptools_calendar.format_answer]
+	  ptools.calendar_scheduling.tools=[ptools_calendar.parse_schedules,ptools_calendar.find_available_slots,ptools_calendar.select_and_format]
 
 # ── Meeting ──
 
@@ -62,13 +62,13 @@ meet_pot:
 	uv run python expt.py run --config-file conf/meeting.yaml \
 	  evaluate.expt_name=meet_pot \
 	  ptools.meeting_planning.method=program_of_thought \
-	  ptools.meeting_planning.tools=[ptools_meeting.extract_constraints,ptools_meeting.solve_problem,ptools_meeting.format_answer]
+	  ptools.meeting_planning.tools=[ptools_meeting.parse_meeting_info,ptools_meeting.plan_visit_order,ptools_meeting.build_meeting_plan]
 
 meet_react:
 	uv run python expt.py run --config-file conf/meeting.yaml \
 	  evaluate.expt_name=meet_react \
 	  ptools.meeting_planning.method=simulate_pydantic \
-	  ptools.meeting_planning.tools=[ptools_meeting.extract_constraints,ptools_meeting.solve_problem,ptools_meeting.format_answer]
+	  ptools.meeting_planning.tools=[ptools_meeting.parse_meeting_info,ptools_meeting.plan_visit_order,ptools_meeting.build_meeting_plan]
 
 # ── Trip ──
 
@@ -93,13 +93,13 @@ trip_pot:
 	uv run python expt.py run --config-file conf/trip.yaml \
 	  evaluate.expt_name=trip_pot \
 	  ptools.trip_planning.method=program_of_thought \
-	  ptools.trip_planning.tools=[ptools_trip.extract_constraints,ptools_trip.solve_problem,ptools_trip.format_answer]
+	  ptools.trip_planning.tools=[ptools_trip.parse_trip_constraints,ptools_trip.find_valid_route,ptools_trip.build_trip_plan]
 
 trip_react:
 	uv run python expt.py run --config-file conf/trip.yaml \
 	  evaluate.expt_name=trip_react \
 	  ptools.trip_planning.method=simulate_pydantic \
-	  ptools.trip_planning.tools=[ptools_trip.extract_constraints,ptools_trip.solve_problem,ptools_trip.format_answer]
+	  ptools.trip_planning.tools=[ptools_trip.parse_trip_constraints,ptools_trip.find_valid_route,ptools_trip.build_trip_plan]
 
 #
 # Stratified 50 samples (same IDs as AgentProject seed=42)
