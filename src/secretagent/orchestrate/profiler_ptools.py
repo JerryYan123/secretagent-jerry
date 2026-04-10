@@ -51,20 +51,16 @@ def identify_weakest_ptool(result_dirs: list) -> str:
     if not profile.ptool_profiles:
         return 'No ptool data available (ensure evaluate.record_details=true)'
 
-    # Score each ptool: lower = more room to improve
+    # Score each ptool: higher = more worth improving
+    skip_utilities = {'extract_index', 'raw_answer', 'format_answer'}
     scored = []
     for name, pp in profile.ptool_profiles.items():
-        # Skip trivial ptools with few calls
-        if pp.n_calls < 3:
+        if pp.n_calls < 3 or name in skip_utilities:
             continue
-        # A ptool that appears equally in correct and incorrect cases
-        # has no discriminative power — that's not necessarily "weak".
-        # Focus on ptools that appear MORE in incorrect cases.
-        incorrect_bias = pp.accuracy_when_incorrect - pp.accuracy_when_correct
         error_count = sum(e.frequency for e in pp.error_patterns)
         error_rate = error_count / pp.n_calls if pp.n_calls else 0.0
-        # Combined weakness score: high = most improvable
-        weakness = incorrect_bias + error_rate + pp.cost_fraction * 0.5
+        # Prefer high-cost ptools (where improvement has impact)
+        weakness = pp.cost_fraction + error_rate * 0.5
         scored.append((name, weakness, pp))
 
     if not scored:
