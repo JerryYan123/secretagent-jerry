@@ -95,10 +95,10 @@ def run(
         n=config.get('dataset.n'),
     )
 
-    # Train cases: first train_n from the dataset
+    # Train cases: use a DIFFERENT seed to ensure disjoint from eval
     train_dataset = load_dataset(
         task, prompt_mode, stratified=stratified,
-        sample_n=sample_n, sample_seed=sample_seed,
+        sample_n=sample_n, sample_seed=99,  # different seed for disjoint split
     )
     train_cases = train_dataset.cases[:train_n]
 
