@@ -31,14 +31,14 @@ CORE_DOTLIST = [
     
 
 def sweep():
-    with config.configuration():
-        for model in MODELS:
-            model_stem = model.split('/')[-1]
-            for step in STEPS:
-                print(f' step: {step} model: {model} '.center(60, '-'))
-                dotlist = (CORE_DOTLIST + 
-                           [f'ptools.{step}.model={model}',
-                            f'evaluate.expt_name={step}_{model_stem}'])
+    for model in MODELS:
+        model_stem = model.split('/')[-1]
+        for step in STEPS:
+            print(f' step: {step} model: {model} '.center(60, '-'))
+            dotlist = (CORE_DOTLIST + 
+                       [f'ptools.{step}.model={model}',
+                        f'evaluate.expt_name={step}_{model_stem}'])
+            with config.configuration():
                 expt.run_experiment(
                     top_level_interface=ptools.are_sports_in_sentence_consistent,
                     dotlist=dotlist
