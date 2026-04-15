@@ -1,0 +1,23 @@
+# Single-shot prompt_llm (full raw model response as answer).
+# Run: uv run python expt.py run --config-file conf/zeroshot_prompt.yaml evaluate.expt_name=zeroshot_prompt
+
+llm:
+  model: together_ai/deepseek-ai/DeepSeek-V3.1
+
+cachier:
+  cache_dir: llm_cache
+
+evaluate:
+  result_dir: results
+  expt_name: DEFAULT
+
+dataset:
+  split: valid
+  shuffle_seed: null
+  n: null
+
+ptools:
+  answer_finqa:
+    method: prompt_llm
+    prompt_template_file: prompt_templates/zeroshot.txt
+    answer_pattern: null

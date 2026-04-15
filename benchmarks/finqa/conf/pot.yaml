@@ -1,0 +1,30 @@
+# Program of thought: LLM writes Python; executed in sandbox with table
+# parsing and compute tools available.
+llm:
+  model: together_ai/deepseek-ai/DeepSeek-V3.1
+
+cachier:
+  cache_dir: llm_cache
+
+evaluate:
+  result_dir: results
+  expt_name: DEFAULT
+
+dataset:
+  split: valid
+  shuffle_seed: null
+  n: null
+
+ptools:
+  parse_table:
+    method: direct
+  compute:
+    method: direct
+  answer_finqa:
+    method: program_of_thought
+    tools:
+      - ptools.parse_table
+      - ptools.compute
+    inject_args: true
+    additional_imports:
+      - re
