@@ -74,6 +74,8 @@ costs:
 
 learn_pipeline: record_workflow learn_consistent_sports evaluate_learned_consistent_sports avg
 
+codedistill_pipeline: record_workflow learn_codedistill_sport_for evaluate_codedistill_sport_for avg
+
 RECORD_OPTS = dataset.split=train evaluate.record_details=true evaluate.result_dir=recordings
 
 record_workflow:
@@ -98,5 +100,19 @@ evaluate_learned_consistent_sports:
 	  ptools.consistent_sports.method=learned_code \
 	  ptools.consistent_sports.learner=rote \
 	  ptools.consistent_sports.backoff=True \
+	  ptools.are_sports_in_sentence_consistent.method=direct \
+	  ptools.are_sports_in_sentence_consistent.fn=ptools.sports_understanding_workflow
+
+# 3) Code distillation for sport_for
+
+learn_codedistill_sport_for:
+	uv run python -m secretagent.cli.learn codedistill --interface sport_for --learned-dir learned recordings/*
+
+evaluate_codedistill_sport_for:
+	uv run python -m secretagent.cli.expt run --interface ptools.are_sports_in_sentence_consistent evaluate.expt_name=workflow_codedistill \
+	  learn.train_dir=learned \
+	  ptools.sport_for.method=learned_code \
+	  ptools.sport_for.learner=codedistill \
+	  ptools.sport_for.backoff=True \
 	  ptools.are_sports_in_sentence_consistent.method=direct \
 	  ptools.are_sports_in_sentence_consistent.fn=ptools.sports_understanding_workflow

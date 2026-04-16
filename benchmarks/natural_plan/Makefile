@@ -161,6 +161,35 @@ plot_meet:
 plot_trip:
 	uv run python -m secretagent.cli.results plot --metric cost- --metric correct --output plot_trip.png results/run_*/*trip_*
 
+#
+# Code distillation learning pipeline
+#
+
+RECORD_OPTS = dataset.partition=train evaluate.record_details=true evaluate.result_dir=recordings
+
+record_cal_workflow:
+	uv run python expt.py run --config-file conf/calendar.yaml \
+	  evaluate.expt_name=cal_workflow \
+	  ptools.calendar_scheduling.method=direct \
+	  ptools.calendar_scheduling.fn=ptools_calendar.calendar_workflow \
+	  $(RECORD_OPTS)
+
+learn_codedistill_find_slots:
+	uv run python -m secretagent.cli.learn codedistill \
+	  --interface find_available_slots --learned-dir learned recordings/*
+
+evaluate_cal_codedistill:
+	uv run python expt.py run --config-file conf/calendar.yaml \
+	  evaluate.expt_name=cal_codedistill \
+	  learn.train_dir=learned \
+	  ptools.find_available_slots.method=learned_code \
+	  ptools.find_available_slots.learner=codedistill \
+	  ptools.find_available_slots.backoff=True \
+	  ptools.calendar_scheduling.method=direct \
+	  ptools.calendar_scheduling.fn=ptools_calendar.calendar_workflow
+
+codedistill_cal_pipeline: record_cal_workflow learn_codedistill_find_slots evaluate_cal_codedistill avg
+
 test:
 	uv run python -m pytest ../../benchmarks/tests/test_natural_plan.py -v
 

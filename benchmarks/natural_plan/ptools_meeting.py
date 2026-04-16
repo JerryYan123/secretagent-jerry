@@ -48,14 +48,18 @@ def build_meeting_plan(prompt: str, info: str, order: str) -> str:
     wait if needed, meet for the required duration. Skip friends who
     cannot be met within their availability window.
 
-    Output MUST start with 'SOLUTION:' followed by steps like:
+    Output MUST be a SINGLE LINE starting with 'SOLUTION:' followed by
+    sentences separated by periods. Use these exact sentence patterns:
     'You start at {location} at {time}.'
     'You travel to {location}. It takes {N} minutes. You arrive at {time}.'
     'You wait until {time}.'
     'You meet {name} for {N} minutes from {time} to {time}.'
 
+    Use 12-hour time with space before AM/PM (e.g. '9:00 AM', '1:30 PM').
+    Put everything on ONE line separated by periods, NOT on separate lines.
+
     >>> build_meeting_plan("...", '{"my_location": "Alamo Square", ...}', '["James", "Nancy"]')
-    'SOLUTION: You start at Alamo Square at 9:00 AM. You travel to Nob Hill. It takes 11 minutes. You arrive at 9:11 AM. You meet James for 30 minutes from 9:11 AM to 9:41 AM. ...'
+    'SOLUTION: You start at Alamo Square at 9:00 AM. You travel to Nob Hill. It takes 11 minutes. You arrive at 9:11 AM. You meet James for 30 minutes from 9:11 AM to 9:41 AM.'
     """
 
 

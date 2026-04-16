@@ -13,7 +13,7 @@ from secretagent.core import interface
 def parse_schedules(prompt: str) -> str:
     """Extract all scheduling information from the calendar problem.
 
-    Return a dict with these keys:
+    Return a JSON dict with these keys:
     - participants: list of participant names
     - duration_minutes: meeting duration (30 or 60)
     - working_hours: [start_str, end_str] e.g. ["9:00", "17:00"]
@@ -25,7 +25,7 @@ def parse_schedules(prompt: str) -> str:
     Use 24-hour format. For participants with "wide open" calendars, use empty lists.
 
     >>> parse_schedules("...schedule a meeting for Alice and Bob for half an hour...")
-    {"participants": ["Alice", "Bob"], "duration_minutes": 30, "working_hours": ["9:00", "17:00"], "days": ["Monday"], "preference": "earliest", "schedules": {"Alice": {"Monday": [["9:00", "10:00"]]}, "Bob": {"Monday": []}}}
+    '{"participants": ["Alice", "Bob"], "duration_minutes": 30, "working_hours": ["9:00", "17:00"], "days": ["Monday"], "preference": "earliest", "schedules": {"Alice": {"Monday": [["9:00", "10:00"]]}, "Bob": {"Monday": []}}}'
     """
 
 
@@ -37,24 +37,25 @@ def find_available_slots(prompt: str, schedules: str) -> str:
     intervals for each participant, intersect them, and filter by
     the required meeting duration.
 
-    Return a list of dicts: [{"day": str, "start": str, "end": str}, ...]
+    Return a JSON list: [{"day": str, "start": str, "end": str}, ...]
     sorted by day order then start time. Use 24-hour "HH:MM" format.
 
-    >>> find_available_slots("...", {"participants": ["Alice","Bob"], "duration_minutes": 30, ...})
-    [{"day": "Monday", "start": "11:00", "end": "11:30"}, {"day": "Monday", "start": "13:00", "end": "13:30"}]
+    >>> find_available_slots("...", '{"participants": ["Alice","Bob"], "duration_minutes": 30, ...}')
+    '[{"day": "Monday", "start": "11:00", "end": "11:30"}, {"day": "Monday", "start": "13:00", "end": "13:30"}]'
     """
 
 
 @interface
-def select_and_format(slots: str, preference: str) -> str:
-    """Pick the best slot based on preference and format the answer.
+def select_and_format(prompt: str, slots: str) -> str:
+    """Pick the best slot based on the scheduling preference in the prompt.
 
-    If preference is "earliest", pick the first slot.
-    If preference is "latest", pick the last slot.
+    Read the prompt to determine if "earliest" or "latest" is preferred.
+    If "earliest" or no preference stated, pick the first slot.
+    If "latest", pick the last slot.
 
     Return exactly: 'Here is the proposed time: {Day}, {HH:MM} - {HH:MM}'
 
-    >>> select_and_format([{"day": "Monday", "start": "11:00", "end": "11:30"}], "earliest")
+    >>> select_and_format("...find the earliest time...", '[{"day": "Monday", "start": "11:00", "end": "11:30"}]')
     'Here is the proposed time: Monday, 11:00 - 11:30'
     """
 
@@ -70,4 +71,4 @@ def calendar_scheduling(prompt: str) -> str:
 def calendar_workflow(prompt: str) -> str:
     schedules = parse_schedules(prompt)
     slots = find_available_slots(prompt, schedules)
-    return select_and_format(slots, "earliest")
+    return select_and_format(prompt, slots)
